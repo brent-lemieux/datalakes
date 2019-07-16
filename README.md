@@ -18,8 +18,8 @@ The ETL pipeline extracts data from `s3a://udacity-dend/`, processes it using Ap
 ### Execution
 Run the script by calling `python etl.py`
 
-Alternatively, run
+Alternatively, run:
 ```
 aws emr add-steps --cluster-id <your-cluster-id> --steps Type=spark,Name=mySparkApp,Args=[--deploy-mode,cluster,--master,yarn,--conf,spark.yarn.submit.waitAppCompletion=false,s3://bwl-spark-example/etl_aws.py],ActionOnFailure=CONTINUE
 ```
-. This requires the `aws cli` to be installed and configured.
+This requires the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) to be installed and configured.
