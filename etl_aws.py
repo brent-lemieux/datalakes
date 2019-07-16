@@ -82,7 +82,7 @@ def process_log_data(spark, input_data, output_data):
     # Create songplays table from log data and song data joined and write.
     song_df = spark.read.parquet(output_data + 'songs/*/*/*.parquet')
     songplays_table = df.join(
-        song_df, df.song == song_df.title & df.artist == song_df.artist_name,
+        song_df, (df.song == song_df.title) & (df.artist == song_df.artist_name),
         how='left'
     )
     songplays_table = songplays_table \
