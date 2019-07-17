@@ -37,8 +37,10 @@ def process_song_data(spark, input_data, output_data):
         'song_id', 'title', 'artist_id', 'artist_name', 'year', 'duration'
     )
     songs_table.dropDuplicates() \
+        .withColumn('year_', F.col('year')) \
+        .withColumn('artist_id_', F.col('artist_id')) \
         .write \
-        .partitionBy('year', 'artist_id') \
+        .partitionBy('year_', 'artist_id_') \
         .save(output_data + 'songs')
     artists_table = df.selectExpr(
         'artist_id', 'artist_name as name', 'artist_location as location',
@@ -78,19 +80,20 @@ def process_log_data(spark, input_data, output_data):
         .withColumn('day_of_week', F.date_format('start_time', 'u'))
     time_table = time_table.withColumn('weekday', is_weekday('day_of_week'))
     time_table.dropDuplicates() \
+        .withColumn('year_', F.col('year')) \
+        .withColumn('month_', F.col('month')) \
         .write \
-        .partitionBy('year', 'month') \
+        .partitionBy('year_', 'month_') \
         .save(output_data + 'time')
     # Create songplays table from log data and song data joined and write.
     song_df = spark.read.parquet(output_data + 'songs/*/*/*.parquet')
     songplays_table = df.join(
-        song_df, (df.song == song_df.title) & (df.artist == song_df.artist_name),
+        song_df,
+        (df.song == song_df.title) & (df.artist == song_df.artist_name),
         how='left'
     )
-    songplays_table = songplays_table \
-        .withColumn('songplay_id', monotonicallyIncreasingId())
     songplays_table = songplays_table.selectExpr(
-        'songplay_id', 'cast(ts/1000 as timestamp) as start_time',
+        'cast(ts/1000 as timestamp) as start_time',
         'userId as user_id', 'level', 'song_id', 'artist_id',
         'sessionId as session_id', 'location', 'userAgent as user_agent'
     )
@@ -109,6 +112,7 @@ def main():
     output_data = "s3://bwl-spark-example/datalakes-project/"
     process_song_data(spark, input_data, output_data)
     process_log_data(spark, input_data, output_data)
+    spark.stop()
 
 
 if __name__ == "__main__":
